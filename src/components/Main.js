@@ -190,7 +190,7 @@ class GalleryByReactApp extends React.Component {
         }
       }
 
-      imgFigures.push(<ImgFigure data={value} ref={'imgFigure' + index} arrange={this.state.imgsArrangeArr[index]}/>);
+      imgFigures.push(<ImgFigure key={value.fileName} data={value} ref={'imgFigure' + index} arrange={this.state.imgsArrangeArr[index]}/>);
     }.bind(this));
 
     return (
