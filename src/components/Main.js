@@ -29,6 +29,13 @@ function getRangeRandom(low, high) {
   return Math.ceil(Math.random() * (high - low) + low);
 }
 
+/**
+ * 获取 0-30* 之间的任意正负值
+ */
+function get30DegRandom() {
+  return Math.random() > 0.5 ? '': '-' + Math.ceil(Math.random() * 30);
+}
+
 class GalleryByReactApp extends React.Component {
 
   // getInitialState () {
@@ -41,8 +48,31 @@ class GalleryByReactApp extends React.Component {
     super(props, context);
 
     this.state = {
-      imgsArrangeArr: []
+      imgsArrangeArr: [
+        /*{
+          pos: {
+            left: '0',
+            top: '0'
+          },
+          rotate: 0,     // 旋转角度
+          isInverse: false,    // 图片正反面
+          isCenter: false
+        }
+         */
+      ]
     };
+  }
+
+
+  /**
+   * 利用arrange函数， 居中对应index的图片
+   * @param index, 需要被居中的图片对应的图片信息数组的index值
+   * @returns {Function}
+   */
+  center (index) {
+    return function () {
+      this.rearrange(index);
+    }.bind(this);
   }
 
   Constant = {
@@ -59,6 +89,22 @@ class GalleryByReactApp extends React.Component {
       x: [0, 0],
       topY: [0, 0]
     }
+  }
+
+  /**
+   * 反转图片
+   * @param index 输入当前被执行inverse 操作的图片信息数组的index值
+   * @return {Function} 这是一个闭包函数，其内return 一个真正待被执行的函数
+   */
+  inverse (index) {
+    return function () {
+      var imgsArrangeArr = this.state.imgsArrangeArr;
+
+      imgsArrangeArr[index].isInverse = !imgsArrangeArr[index].isInverse;
+      this.setState({
+        imgsArrangeArr: imgsArrangeArr
+      });
+    }.bind(this);
   }
 
    /*
@@ -97,9 +143,11 @@ class GalleryByReactApp extends React.Component {
       imgsArrangeTopArr.forEach(function (value, index) {
           imgsArrangeTopArr[index] = {
             pos: {
-                top: getRangeRandom(vPosRangeTopY[0], vPosRangeTopY[1]),
-                left: getRangeRandom(vPosRangeX[0], vPosRangeX[1])
-            }
+              top: getRangeRandom(vPosRangeTopY[0], vPosRangeTopY[1]),
+              left: getRangeRandom(vPosRangeX[0], vPosRangeX[1])
+            },
+            rotate: get30DegRandom(),
+            isCenter: false
           };
       });
 
@@ -118,7 +166,9 @@ class GalleryByReactApp extends React.Component {
           pos: {
             top: getRangeRandom(hPosRangeY[0], hPosRangeY[1]),
             left: getRangeRandom(hPosRangeLORX[0], hPosRangeLORX[1])
-          }
+          },
+          rotate: get30DegRandom(),
+          isCenter: false
         };
       }
 
@@ -186,11 +236,14 @@ class GalleryByReactApp extends React.Component {
           pos: {
             left: 0,
             top: 0
-          }
+          },
+          rotate: 0,
+          isInverse: false,
+          isCenter: false
         }
       }
 
-      imgFigures.push(<ImgFigure key={value.fileName} data={value} ref={'imgFigure' + index} arrange={this.state.imgsArrangeArr[index]}/>);
+      imgFigures.push(<ImgFigure key={value.fileName} data={value} ref={'imgFigure' + index} arrange={this.state.imgsArrangeArr[index]} inverse={this.inverse(index)} center={this.center(index)}/>);
     }.bind(this));
 
     return (
@@ -207,6 +260,23 @@ class GalleryByReactApp extends React.Component {
 }
 
 class ImgFigure extends React.Component {
+
+  /**
+   * imgFigure 的点击处理函数
+   * 主要这里的写法
+   */
+  handleClick = (e) => {
+
+    if (this.props.arrange.isCenter) {
+      this.props.inverse();
+    } else {
+      this.props.center();
+    }
+
+    e.stopPropagation();
+    e.preventDefault();
+  }
+
   render() {
 
     var styleObj = {};
@@ -216,11 +286,30 @@ class ImgFigure extends React.Component {
         styleObj = this.props.arrange.pos;
     }
 
+    // 如果图片的旋转角度有值并且不为0， 添加旋转角度
+    if (this.props.arrange.rotate) {
+      (['MozTransform', 'msTransform', 'WebkitTransform', 'transform']).forEach(function (value) {
+        styleObj[value] = 'rotate(' + this.props.arrange.rotate + 'deg)';
+      }.bind(this));
+    }
+
+    if (this.props.arrange.isCenter) {
+      styleObj.zIndex = 11
+    }
+
+    var imgFigureClassName = 'img-figure';
+      imgFigureClassName += this.props.arrange.isInverse ? ' is-inverse': '';
+
     return (
-      <figure className="img-figure" style={styleObj}>
+      <figure className={imgFigureClassName} style={styleObj} onClick={this.handleClick} >
         <img src={this.props.data.imageURL} alt={this.props.data.title}/>
         <figcaption>
           <h2 className="img-title">{this.props.data.title}</h2>
+          <div className="img-back" onClick={this.handleClick}>
+            <p>
+              {this.props.data.desc}
+            </p>
+          </div>
         </figcaption>
       </figure>
     );
