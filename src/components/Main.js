@@ -31,6 +31,7 @@ function getRangeRandom(low, high) {
 
 class GalleryByReactApp extends React.Component {
 
+  // createClass 方法创建组件时的用法
   // getInitialState () {
   //   return {
   //     imgsArrangeArr: []
