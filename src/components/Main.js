@@ -33,7 +33,7 @@ function getRangeRandom(low, high) {
  * 获取 0-30* 之间的任意正负值
  */
 function get30DegRandom() {
-  return Math.random() > 0.5 ? '': '-' + Math.ceil(Math.random() * 30);
+  return ((Math.random() > 0.5 ? '': '-') + Math.ceil(Math.random() * 30));
 }
 
 class GalleryByReactApp extends React.Component {
@@ -50,7 +50,7 @@ class GalleryByReactApp extends React.Component {
 
     this.state = {
       imgsArrangeArr: [
-        /*{
+        {
           pos: {
             left: '0',
             top: '0'
@@ -59,7 +59,6 @@ class GalleryByReactApp extends React.Component {
           isInverse: false,    // 图片正反面
           isCenter: false
         }
-         */
       ]
     };
   }
@@ -245,6 +244,8 @@ class GalleryByReactApp extends React.Component {
       }
 
       imgFigures.push(<ImgFigure key={value.fileName} data={value} ref={'imgFigure' + index} arrange={this.state.imgsArrangeArr[index]} inverse={this.inverse(index)} center={this.center(index)}/>);
+
+      controllerUnits.push(<ControllerUnit key={index} arrange={this.state.imgsArrangeArr[index]} inverse={this.inverse(index)} center={this.center(index)}/>);
     }.bind(this));
 
     return (
@@ -313,6 +314,37 @@ class ImgFigure extends React.Component {
           </div>
         </figcaption>
       </figure>
+    );
+  }
+}
+
+class ControllerUnit extends React.Component {
+  handleClick = (e) => {
+    // 如果点击的是当前正在选中态的按钮，则翻转图片，否则将对应的图片居中
+    if (this.props.arrange.isCenter) {
+      this.props.inverse();
+    } else {
+      this.props.center();
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  render() {
+    var controllerUnitClassName = 'controller-unit';
+
+    // 如果对应的是居中的图片，显示控制的居中态
+    if (this.props.arrange.isCenter) {
+      controllerUnitClassName += ' is-center';
+
+      // 如果同时对应的是翻转的图片，显示控制按钮的翻转状态
+      if (this.props.arrange.isInverse) {
+        controllerUnitClassName += ' is-inverse';
+      }
+    }
+    return (
+      <span className={controllerUnitClassName} onClick={this.handleClick}></span>
     );
   }
 }
